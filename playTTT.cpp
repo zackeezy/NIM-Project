@@ -1,4 +1,4 @@
-// playTicTacToe.cpp
+// playNim.cpp
 // This set of functions are used to actually play the game.
 // Play starts with the function: playTicTacToe() which is defined below
 
@@ -15,7 +15,7 @@ int Chat(SOCKET s, std::string serverName, std::string remoteIP, std::string rem
 	std::string message;
 	do {
 		if (myMove) {
-			std::cout << "Input chat message: ";
+			std::cout << "Input chat message or forfeit: ";
 			getline(std::cin, message);
 
 			temp = message;
@@ -24,8 +24,14 @@ int Chat(SOCKET s, std::string serverName, std::string remoteIP, std::string rem
 				c = tolower(c);
 			}
 
-			message = temp;
+			if (_stricmp(temp.c_str(), "f") == 0)
+				std::cout << "You have forfeited. You lose." << std::endl;
+			else
+				message = temp;
+
 			int len1 = UDP_send(s, (char*)message.c_str(), message.length(), (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+			if (_stricmp(temp.c_str(), "f") == 0)
+				return ABORT;
 		}
 		else {
 			std::cout << "Waiting for your opponent's move..." << std::endl << std::endl;
@@ -37,7 +43,8 @@ int Chat(SOCKET s, std::string serverName, std::string remoteIP, std::string rem
 				for (char c : check) {
 					c = tolower(c);
 				}
-				if (check == "quit") {
+				if (_stricmp(check.c_str(), "f") == 0) {
+					std::cout << "Your opponent has forfeited! Congratulations! You win!" << std::endl;
 					return ABORT;
 				}
 				std::cout << name << ": " << moveRecv << std::endl;
