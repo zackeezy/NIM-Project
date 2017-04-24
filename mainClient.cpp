@@ -11,9 +11,9 @@ int mainClient(int argc, char *argv[], std::string playerName)
 	std::string port;
 	ServerStruct server[MAX_SERVERS];
 
-	SOCKET s = connectsock("","","udp");	// Create a socket  (Don't need to designate a host or port for UDP)
+	SOCKET s = connectsock("", "", "udp");	// Create a socket  (Don't need to designate a host or port for UDP)
 
-	// Find all TicTacToe servers on our subnet
+											// Find all Nim servers on our subnet
 	std::cout << std::endl << "Looking for Chat servers ... " << std::endl;
 
 	char broadcastAddress[v4AddressSize];
@@ -23,17 +23,19 @@ int mainClient(int argc, char *argv[], std::string playerName)
 
 	if (numServers == 0) {
 		std::cout << std::endl << "Sorry.  No Chat servers were found.  Try again later." << std::endl << std::endl;
-	} else {
+	}
+	else {
 		// Display the list of servers found
 		std::cout << std::endl << "Found Chat server";
 		if (numServers == 1) {
 			std::cout << ":  " << server[0].name << std::endl;
-		} else {
+		}
+		else {
 			std::cout << "s:" << std::endl;
-			for (int i=0; i<numServers; i++) {
-				std::cout << "  " << i+1 << " - " << server[i].name << std::endl;
+			for (int i = 0; i<numServers; i++) {
+				std::cout << "  " << i + 1 << " - " << server[i].name << std::endl;
 			}
-			std::cout << std::endl << "  " << numServers+1 << " - QUIT" << std::endl;
+			std::cout << std::endl << "  " << numServers + 1 << " - QUIT" << std::endl;
 		}
 		std::cout << std::endl;
 
@@ -44,28 +46,79 @@ int mainClient(int argc, char *argv[], std::string playerName)
 			std::cout << "Do you want to chat with " << server[0].name << "? ";
 			std::getline(std::cin, answer_str);
 			if (answer_str[0] == 'y' || answer_str[0] == 'Y') answer = 1;
-		} else if (numServers > 1) {
-			std::cout << "Who would you like to Chat with (1-" << numServers+1 << ")? ";
-			std::getline(std::cin,answer_str);
+		}
+		else if (numServers > 1) {
+			std::cout << "Who would you like to Chat with (1-" << numServers + 1 << ")? ";
+			std::getline(std::cin, answer_str);
 			answer = atoi(answer_str.c_str());
 			if (answer > numServers) answer = 0;
 		}
-			
+
 		if (answer >= 1 && answer <= numServers) {
 			// Extract the opponent's info from the server[] array
 			std::string serverName;
-			serverName = server[answer-1].name;		// Adjust for 0-based array
-			host = server[answer-1].host;
-			port = server[answer-1].port;
+			serverName = server[answer - 1].name;		// Adjust for 0-based array
+			host = server[answer - 1].host;
+			port = server[answer - 1].port;
 
 			// Append playerName to the TicTacToe_CHALLENGE string & send a challenge to host:port
 			char buf[MAX_SEND_BUF];
-			strcpy_s(buf,TicTacToe_CHALLENGE);
-			strcat_s(buf,playerName.c_str());
-			int len = UDP_send(s, buf, strlen(buf)+1,(char*)host.c_str(), (char*)port.c_str());
+			strcpy_s(buf, TicTacToe_CHALLENGE);
+			strcat_s(buf, playerName.c_str());
+			int len = UDP_send(s, buf, strlen(buf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
-			// Play the game.  You are the 'X' player
-			int winner = Chat(s, serverName, host, port, serverName);
+			//wait for a reply; either YES or NO
+			int status = wait(s, 20, 0);
+			if (status > 0) {
+
+				char resp[MAX_RECV_BUF];
+
+				int len2 = UDP_recv(s, resp, MAX_RECV_BUF, (char*)host.c_str(), (char*)port.c_str());
+
+				//if NO, let player challenge someone else
+				if (std::string(resp) == "NO") {
+					std::cout << "Request Denied. Please select another server" << std::endl;
+
+					if (numServers == 1) {
+						std::cout << "Do you want to chat with " << server[0].name << "? ";
+						std::getline(std::cin, answer_str);
+						if (answer_str[0] == 'y' || answer_str[0] == 'Y') answer = 1;
+					}
+					else if (numServers > 1) {
+						std::cout << "Who would you like to Chat with (1-" << numServers + 1 << ")? ";
+						std::getline(std::cin, answer_str);
+						answer = atoi(answer_str.c_str());
+						if (answer > numServers) answer = 0;
+					}
+				}
+
+				//if YES, send GREAT and start the game
+				if (std::string(resp) == "YES") {
+					char greatbuf[MAX_SEND_BUF];
+					strcpy_s(greatbuf, "GREAT!");
+					int len = UDP_send(s, greatbuf, strlen(greatbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
+
+					// Play the game.  You are the 'X' player
+					int winner = Chat(s, serverName, host, port, serverName);
+				}
+			}
+			//If no response is received from the other user within the time allotted
+			//(or the response is something other than “YES” or “NO”), 
+			//your client code should assume the answer is “NO”; 
+			//and allow your local user to either challenge someone else or exit.
+			std::cout << "Request Denied. Please select another server" << std::endl;
+
+			if (numServers == 1) {
+				std::cout << "Do you want to chat with " << server[0].name << "? ";
+				std::getline(std::cin, answer_str);
+				if (answer_str[0] == 'y' || answer_str[0] == 'Y') answer = 1;
+			}
+			else if (numServers > 1) {
+				std::cout << "Who would you like to Chat with (1-" << numServers + 1 << ")? ";
+				std::getline(std::cin, answer_str);
+				answer = atoi(answer_str.c_str());
+				if (answer > numServers) answer = 0;
+			}
 		}
 	}
 

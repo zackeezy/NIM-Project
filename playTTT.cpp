@@ -29,7 +29,7 @@ int Chat(SOCKET s, std::string serverName, std::string remoteIP, std::string rem
 			else
 				message = temp;
 
-			int len1 = UDP_send(s, (char*)message.c_str(), message.length(), (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+			int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
 			if (_stricmp(temp.c_str(), "f") == 0)
 				return ABORT;
 		}
