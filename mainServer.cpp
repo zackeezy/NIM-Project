@@ -36,11 +36,13 @@ int mainServer(int argc, char *argv[], std::string playerName)
 				std::getline(std::cin, answer);
 				if (answer[0] == 'y' || answer[0] == 'Y') {
 					//If they do accept the challenge, your server code should send a UDP datagram back to
+					//the client that contains the string "YES"
 					char yesbuf[MAX_SEND_BUF];
 					strcpy_s(yesbuf, "YES");
 					int len = UDP_send(s, yesbuf, strlen(yesbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
 					// then wait (for up to 2 seconds) for a reply UDP-datagram from the client that 
+					//contains the string "GREAT!"
 					int status = wait(s, 2, 0);
 					if (status > 0) {
 						char resp[MAX_RECV_BUF];
@@ -55,7 +57,7 @@ int mainServer(int argc, char *argv[], std::string playerName)
 					}					
 				}
 				else {
-					//If they do not accept the challenge, send a UDP datagram back to the client containing the string ï¿½NOï¿½
+					//If they do not accept the challenge, send a UDP datagram back to the client containing the string “NO”
 					char nobuf[MAX_SEND_BUF];
 					strcpy_s(nobuf, "NO");
 					int len = UDP_send(s, nobuf, strlen(nobuf) + 1, (char*)host.c_str(), (char*)port.c_str());
