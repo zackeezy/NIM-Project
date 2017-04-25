@@ -27,8 +27,8 @@ int main (int argc, char *argv[])
 	do {
 		std::cout << std::endl << std::endl << std::endl;
 		std::cout << "Choose an option:" << std::endl;
-		std::cout << "   1 - Host a Chat" << std::endl;
-		std::cout << "   2 - Join a Chat" << std::endl;
+		std::cout << "   1 - Host a Game" << std::endl;
+		std::cout << "   2 - Join a Game" << std::endl;
 		std::cout << "   3 - Quit" << std::endl;
 		std::cout << "Enter 1, 2 or 3: ";
 		std::cin >> choice_str; std::cin.get(newline);
