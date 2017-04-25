@@ -15,7 +15,7 @@ int Chat(SOCKET s, std::string serverName, std::string remoteIP, std::string rem
 	std::string message;
 	do {
 		if (myMove) {
-			std::cout << "Input chat message or forfeit: ";
+			std::cout << "Input move, chat message, or forfeit: ";
 			getline(std::cin, message);
 
 			temp = message;

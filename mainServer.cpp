@@ -5,8 +5,6 @@
 #include <string>
 #include <WinSock2.h>
 
-
-
 int mainServer(int argc, char *argv[], std::string playerName)
 {
 	SOCKET s;
@@ -32,14 +30,37 @@ int mainServer(int argc, char *argv[], std::string playerName)
 			// Received a challenge  
 			char *startOfName = strstr(buf,TicTacToe_CHALLENGE);
 			if (startOfName != NULL) {
-				std::cout << std::endl << "The person you are chatting with is " << startOfName + strlen(TicTacToe_CHALLENGE) << std::endl;
-			}
+				//Give your user a chance to accept the challenge
+				std::cout << std::endl << "Enter y to accept " << startOfName + strlen(TicTacToe_CHALLENGE) << "'s challenge";
+				std::string answer;
+				std::getline(std::cin, answer);
+				if (answer[0] == 'y' || answer[0] == 'Y') {
+					//If they do accept the challenge, your server code should send a UDP datagram back to
+					char yesbuf[MAX_SEND_BUF];
+					strcpy_s(yesbuf, "YES");
+					int len = UDP_send(s, yesbuf, strlen(yesbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
-			std::string otherName(startOfName + strlen(TicTacToe_CHALLENGE));
-			
-			// Play the game.  You are the 'O' player
-			int winner = Chat(s, (char*) playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, false);
-			finished = true;
+					// then wait (for up to 2 seconds) for a reply UDP-datagram from the client that 
+					int status = wait(s, 2, 0);
+					if (status > 0) {
+						char resp[MAX_RECV_BUF];
+						int len2 = UDP_recv(s, resp, MAX_RECV_BUF, (char*)host.c_str(), (char*)port.c_str());
+
+						if (std::string(resp) == "GREAT!") {
+							std::string otherName(startOfName + strlen(TicTacToe_CHALLENGE));
+							// Play the game.  You are the host player
+							int winner = Chat(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, false);
+							finished = true;
+						}
+					}					
+				}
+				else {
+					//If they do not accept the challenge, send a UDP datagram back to the client containing the string �NO�
+					char nobuf[MAX_SEND_BUF];
+					strcpy_s(nobuf, "NO");
+					int len = UDP_send(s, nobuf, strlen(nobuf) + 1, (char*)host.c_str(), (char*)port.c_str());
+				}
+			}
 		}
 
 		if (!finished) {

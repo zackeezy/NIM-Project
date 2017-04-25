@@ -87,7 +87,7 @@ int mainClient(int argc, char *argv[], std::string playerName)
 						int len = UDP_send(s, greatbuf, strlen(greatbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
 						stillConnecting = false;
-						// Play the game.  You are the 'X' player
+						// Play the game.  You are the challenger player
 						int winner = Chat(s, serverName, host, port, serverName);
 					}
 					else {
