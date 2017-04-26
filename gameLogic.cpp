@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
-#include <random>
-#include <functional>
+//#include <random>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 
 using std::vector;
 using std::cout;
@@ -34,7 +35,7 @@ public:
 	*/
 	void draw_game() {
 		for (int i = 0; i < rows.size(); i++) {
-			cout << i + 1 << ": ";
+			cout << i + 1 << ": (" << rows[i]<<")";
 			for (int j = 0; j < rows[i]; j++) {
 				cout << " * ";
 			}
@@ -109,7 +110,7 @@ public:
 	void parseString(char* received_string) {
 		row_count = received_string[0] - '0';
 
-		rsize_t length = sizeof(received_string) - 2;
+		rsize_t length = strlen(received_string) - 1;
 		//Max number of piles is two
 		int rows_received[9];
 
@@ -120,7 +121,7 @@ public:
 			index += 2;
 		}
 		//Populating the vector
-		for (int i = row_count - 1; i >= 0; i--) {
+		for (int i = 0; i < row_count; i++) {
 			rows.push_back(rows_received[i]);
 		}
 	}
@@ -129,13 +130,15 @@ public:
 	//The server / host always specifies the number of rock piles 
 	//and how many rocks are in each pile (3 <= Piles <= 9; 1 <= Rocks per Pile <= 20)
 	void chooseConfig() {
-		std::default_random_engine generator;
-		std::uniform_int_distribution<int> rowcount_distribution(3, 9);
-		row_count = rowcount_distribution(generator);  // generates number in the range 3..9
-		std::uniform_int_distribution<int> rockcount_distribution(1, 20);
-		auto numRocks = std::bind(rockcount_distribution, generator);
+		//std::default_random_engine generator;
+		//std::uniform_int_distribution<int> rowcount_distribution(3, 9);
+		//row_count = rowcount_distribution(generator);  // generates number in the range 3..9
+		//std::uniform_int_distribution<int> rockcount_distribution(1, 20);
+		row_count = rand() % 9 + 3;
+		srand(time(NULL));
 		for (int i = 0; i < row_count; i++) {
-			rows[i] = numRocks(); // generates numbers in the range 1..20
+			//rows.push_back(rockcount_distribution(generator));  // generates number in the range 1..20
+			rows.push_back(rand() % 20 + 1);
 		}
 	}
 

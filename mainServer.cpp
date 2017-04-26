@@ -1,9 +1,10 @@
 // mainServer.cpp
 //   This function serves as the "main" function for the server side
 #include "TicTacToe.h"
+#include <WinSock2.h>
 #include <iostream>
 #include <string>
-#include <WinSock2.h>
+#include <cctype>
 
 
 int mainServer(int argc, char *argv[], std::string playerName)
@@ -32,7 +33,7 @@ int mainServer(int argc, char *argv[], std::string playerName)
 			char *startOfName = strstr(buf,TicTacToe_CHALLENGE);
 			if (startOfName != NULL) {
 				//Give your user a chance to accept the challenge
-				std::cout << std::endl << "Enter y to accept " << startOfName + strlen(TicTacToe_CHALLENGE) << "'s challenge";
+				std::cout << std::endl << "Enter y to accept " << startOfName + strlen(TicTacToe_CHALLENGE) << "'s challenge: ";
 				std::string answer;
 				std::getline(std::cin, answer);
 				if (answer[0] == 'y' || answer[0] == 'Y') {

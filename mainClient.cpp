@@ -27,6 +27,7 @@ int mainClient(int argc, char *argv[], std::string playerName)
 
 		if (numServers == 0) {
 			std::cout << std::endl << "Sorry.  No Nim servers were found.  Try again later." << std::endl << std::endl;
+			stillConnecting = false;
 		}
 		else {
 			// Display the list of servers found

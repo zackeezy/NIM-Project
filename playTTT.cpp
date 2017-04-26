@@ -24,6 +24,7 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 			bool chatting = true;
 			while (chatting) 
 			{
+				bool validmessage = true;
 				std::cout << "Input move (1-" << game.row_count << "), chat message, or forfeit (f): ";
 				getline(std::cin, message);
 
@@ -43,37 +44,49 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 					try {
 						//else if a #
 						int rownum = stoi(message, nullptr);
-						std::cout << "how many would you like to remove?" << std::endl;
-						std::string rockstr;
-						std::getline(cin, rockstr);
-						int rocknum = stoi(rockstr, nullptr);
-						bool valid = game.remove_elements(rownum - 1, rocknum);
-						if (valid) {
-							//if 1 <= n <= numRocks, set message to move in right format
-							//mnn (1st n is a 0 if n < 10)
-							//set it so they can't make any more comments
-							chatting = false;
-							char messagebuf[MAX_SEND_BUF];
-							char rockbuf[MAX_SEND_BUF];
-							itoa(rownum, messagebuf, 10);
-							if (rocknum < 10) {
-								itoa(0, rockbuf, 10);
+						if (rownum <= game.row_count && rownum > 0) {
+							std::cout << "how many would you like to remove? (1-" << game.rows[rownum - 1] << ")" << std::endl;
+							std::string rockstr;
+							std::getline(cin, rockstr);
+							int rocknum = stoi(rockstr, nullptr);
+							bool valid = game.remove_elements(rownum - 1, rocknum);
+							if (valid) {
+								//if 1 <= n <= numRocks, set message to move in right format
+								//mnn (1st n is a 0 if n < 10)
+								//set it so they can't make any more comments
+								chatting = false;
+								char messagebuf[MAX_SEND_BUF];
+								char rockbuf[MAX_SEND_BUF];
+								itoa(rownum, messagebuf, 10);
+								if (rocknum < 10) {
+									itoa(0, rockbuf, 10);
+									strcat(messagebuf, rockbuf);
+								}
+								itoa(rocknum, rockbuf, 10);
 								strcat(messagebuf, rockbuf);
+								message = messagebuf;
 							}
-							itoa(rocknum, rockbuf, 10);
-							strcat(messagebuf, rockbuf);
-							message = messagebuf;
+							else {
+								//else it was an invalid move
+								//if user enters invalid move, let them choose again
+								std::cout << "Please check your input and try again." << std::endl;
+								validmessage = false;
+							}
 						}
-						//else it was an invalid move
-						//if user enters invalid move, let them choose again
-						cout << "Please check your input and try again." << endl;										
+						else {
+							std::cout << "please enter a valid row"<<std::endl;
+							validmessage = false;
+						}
+															
 					}
 					catch(...){
 						//it's a comment, add a 'C' to the beginning to specify a chat
 						message = "C" + temp;
 					}
 				}
-				int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+				if (validmessage) {
+					int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+				}
 			}
 
 			//check for win, if win show user and stop playing
@@ -93,9 +106,9 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 				if (status > 0) {
 					int len2 = UDP_recv(s, recv, MAX_RECV_BUF, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
 					std::string check(recv);
-					for (char c : check) {
+					/*for (char c : check) {
 						c = tolower(c);
-					}
+					}*/
 
 					if (_stricmp(check.c_str(), "f") == 0) {
 						std::cout << "Your opponent has forfeited! Congratulations! You win!" << std::endl;
@@ -104,22 +117,27 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 					}
 					else if (check[0]=='C') {
 						//if comment, display (and keep listening until get a move or forfeit)
+						//get rid of c in front of comment
+						std::string comment;
+						comment = recv;
+						comment.erase(0, 1);
 						std::cout << name << ": " << recv << std::endl;
 					}
 					else if(std::regex_match(check.begin(), check.begin()+1, std::regex("[1-9]"))){
 						//if move, check for validity then a win, stop chatting
-						int row = check[0];
-						int rocks1 = check[1];
-						int rocks2 = check[2];
+						int row = check[0]-48;
+						int rocks1 = check[1]-48;
+						int rocks2 = check[2]-48;
 						rocks1 *= 10;
 						int rocks = rocks1 + rocks2;
-						int valid = game.remove_elements(row, rocks);
+						int valid = game.remove_elements(row - 1, rocks);
 						if (!valid) {
-							std::cout << "You have won by default" << std::endl;
+							std::cout << "You have won by default (invalid move)" << std::endl;
 							return 1;
 						}
 						else {
 							chatting = false;
+							std::cout << name << " removed " << rocks << " from pile " << row << endl;
 							//if a win, show the user they lost and stop playing
 							if (game.sum() == 0) {
 								cout << "You lose." << endl;
@@ -131,14 +149,14 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 						//if anything else (doesn't start w/ 1-9, C, or F)
 						//game over, show won by default, stop playing
 						chatting = false;
-						std::cout << "You have won by default" << std::endl;
+						std::cout << "You have won by default (wrong format: " << recv << std::endl;
 						return 1;
 					}
 					message = recv;
 				}
 				else {
 					//game over, show won by default, stop playing
-					std::cout << "You have won by default" << std::endl;
+					std::cout << "You have won by default (timeout)" << std::endl;
 					chatting = false;
 					return 1;
 				}
