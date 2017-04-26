@@ -61,11 +61,13 @@ int mainServer(int argc, char *argv[], std::string playerName)
 							// The specific rock pile configuration should be sent to the client 
 							// machine in a datagram that has the format : “mn1n1n2n2n3n3nmnm”, 
 							// where m is the number of piles and nini is a two digit number that 
-							// represents the number of rocks in the ith pile. 							char configbuf[MAX_SEND_BUF];
+							// represents the number of rocks in the ith pile. 
+							char configbuf[MAX_SEND_BUF];
 							char rockbuf[MAX_SEND_BUF];
 							itoa(game.row_count, configbuf, 10);
 							for (int i = 0; i < game.row_count; i++) {
-								//If the number of rocks in the ith pile is less than 10,								if (game.rows[i] < 10) {
+								//If the number of rocks in the ith pile is less than 10,
+								if (game.rows[i] < 10) {
 									//the corresponding 2 digit number must have a leading zero.
 									itoa(0, rockbuf, 10);
 									strcat(configbuf, rockbuf);

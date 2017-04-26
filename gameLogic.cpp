@@ -63,7 +63,6 @@ public:
 				return true;
 			}
 		}
-		cout << "Please check your input and try again." << endl;
 		return false;
 	}
 

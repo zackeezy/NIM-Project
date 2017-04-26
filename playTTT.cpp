@@ -23,7 +23,7 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 			bool chatting = true;
 			while (chatting) 
 			{
-				std::cout << "Input move (1-" << game.row_count << "), chat message (c), or forfeit (f): ";
+				std::cout << "Input move (1-" << game.row_count << "), chat message, or forfeit (f): ";
 				getline(std::cin, message);
 
 				temp = message;
@@ -38,24 +38,48 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 					message = "F";
 					chatting = false;
 				}
-				//else if () {
-					//else if a #
-					//if 1<=m<=numPiles ask how many rocks to remove
-					//if 1<=n<=numRocks, set message to move in right format
-					//mnn (1st n is a 0 if n<10)
-					//set it so they can't make any more comments
-					//check for win, if win show user and stop playing
-					//if user enters invalid move, let them choose again
-
-				//}
-			
 				else {
-					//it's a comment, add a 'C' to the beginning to specify a chat
-					message = "C" + temp;
+					try {
+						//else if a #
+						int rownum = stoi(message, nullptr);
+						std::cout << "how many would you like to remove?" << std::endl;
+						std::string rockstr;
+						std::getline(cin, rockstr);
+						int rocknum = stoi(rockstr, nullptr);
+						bool valid = game.remove_elements(rownum - 1, rocknum);
+						if (valid) {
+							//if 1 <= n <= numRocks, set message to move in right format
+							//mnn (1st n is a 0 if n < 10)
+							//set it so they can't make any more comments
+							chatting = false;
+							char messagebuf[MAX_SEND_BUF];
+							char rockbuf[MAX_SEND_BUF];
+							itoa(rownum, messagebuf, 10);
+							if (rocknum < 10) {
+								itoa(0, rockbuf, 10);
+								strcat(messagebuf, rockbuf);
+							}
+							itoa(rocknum, rockbuf, 10);
+							strcat(messagebuf, rockbuf);
+							message = messagebuf;
+						}
+						//else it was an invalid move
+						//if user enters invalid move, let them choose again
+						cout << "Please check your input and try again." << endl;										
+					}
+					catch(...){
+						//it's a comment, add a 'C' to the beginning to specify a chat
+						message = "C" + temp;
+					}
 				}
 				int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
 			}
 
+			//check for win, if win show user and stop playing
+			if (game.sum() == 0) {
+				cout << "You win." << endl;
+				return 1;
+			}
 			if (_stricmp(temp.c_str(), "f") == 0)
 				return ABORT;
 		}
