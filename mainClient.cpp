@@ -88,6 +88,7 @@ int mainClient(int argc, char *argv[], std::string playerName)
 
 						stillConnecting = false;
 						// Play the game.  You are the challenger player
+						//receive and parse the board config string (logic in gameLogic.cpp)
 						int winner = Chat(s, serverName, host, port, serverName);
 					}
 					else {
@@ -98,7 +99,8 @@ int mainClient(int argc, char *argv[], std::string playerName)
 					//If no response is received from the other user within the time allotted 
 					//(or the response is something other than “YES” or “NO”), 
 					//your client code should assume the answer is “NO”; 
-					//and allow your local user to either challenge someone else or exit.					std::cout << "Request Denied. Please select another server or quit" << std::endl;
+					//and allow your local user to either challenge someone else or exit.
+					std::cout << "Request Denied. Please select another server or quit" << std::endl;
 				}
 			}
 			else if (answer > numServers) {

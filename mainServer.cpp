@@ -51,6 +51,7 @@ int mainServer(int argc, char *argv[], std::string playerName)
 						if (std::string(resp) == "GREAT!") {
 							std::string otherName(startOfName + strlen(TicTacToe_CHALLENGE));
 							// Play the game.  You are the host player
+							//choose initial board configuration
 							int winner = Chat(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, false);
 							finished = true;
 						}
