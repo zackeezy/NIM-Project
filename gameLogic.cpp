@@ -59,7 +59,7 @@ public:
 	bool remove_elements(int row, int number) {
 
 		if (row < rows.size()) {
-			if (number <= rows[row]) {
+			if (number <= rows[row] && number != 0) {
 				rows[row] -= number;
 				return true;
 			}
