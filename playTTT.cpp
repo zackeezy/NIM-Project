@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <cctype>
+#include <regex>
 
 int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remotePort, std::string name, NimGame game, bool moveDef)
 {
@@ -95,25 +96,51 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 					for (char c : check) {
 						c = tolower(c);
 					}
+
 					if (_stricmp(check.c_str(), "f") == 0) {
 						std::cout << "Your opponent has forfeited! Congratulations! You win!" << std::endl;
 						chatting = false;
-						return ABORT;
+						return 1;
 					}
-					//check to see if move or comment
-					//if comment, display (and keep listening until get a move or forfeit)
+					else if (check[0]=='C') {
+						//if comment, display (and keep listening until get a move or forfeit)
 						std::cout << name << ": " << recv << std::endl;
-					//if move, check for validity then a win, stop chatting
-					//update the board if valid and not a win
-					//if a win, show the user they lost and stop playing
-					//if anything else (doesn't start w/ 1-9, C, or F)
-					//game over, show won by default, stop playing
+					}
+					else if(std::regex_match(check.begin(), check.begin()+1, std::regex("[1-9]"))){
+						//if move, check for validity then a win, stop chatting
+						int row = check[0];
+						int rocks1 = check[1];
+						int rocks2 = check[2];
+						rocks1 *= 10;
+						int rocks = rocks1 + rocks2;
+						int valid = game.remove_elements(row, rocks);
+						if (!valid) {
+							std::cout << "You have won by default" << std::endl;
+							return 1;
+						}
+						else {
+							chatting = false;
+							//if a win, show the user they lost and stop playing
+							if (game.sum() == 0) {
+								cout << "You lose." << endl;
+								return 0;
+							}
+						}
+					}
+					else {
+						//if anything else (doesn't start w/ 1-9, C, or F)
+						//game over, show won by default, stop playing
+						chatting = false;
+						std::cout << "You have won by default" << std::endl;
+						return 1;
+					}
 					message = recv;
 				}
 				else {
 					//game over, show won by default, stop playing
+					std::cout << "You have won by default" << std::endl;
 					chatting = false;
-					return ABORT;
+					return 1;
 				}
 			}
 		}
