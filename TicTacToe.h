@@ -2,6 +2,8 @@
 
 #include <WinSock2.h>
 #include <string>
+#include "gamelogic.cpp"
+
 
 static char TicTacToe_UDPPORT[] = "29333";			// Port number used by Chat servers
 
@@ -38,6 +40,6 @@ int UDP_send (SOCKET, char*, int, char*, char*);
 int wait(SOCKET, int, int);
 char* getBroadcastAddress();
 int getServers(SOCKET, char*, char*, ServerStruct[]);
-int Chat(SOCKET, std::string, std::string, std::string, std::string, bool moveDef = true);
+int Nim(SOCKET, std::string, std::string, std::string, std::string, NimGame game, bool moveDef = true);
 int mainServer(int, char*[], std::string);
 int mainClient(int, char*[], std::string);

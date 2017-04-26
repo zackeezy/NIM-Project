@@ -86,10 +86,16 @@ int mainClient(int argc, char *argv[], std::string playerName)
 						strcpy_s(greatbuf, "GREAT!");
 						int len = UDP_send(s, greatbuf, strlen(greatbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
+						//stop looping and trying to connect
 						stillConnecting = false;
+
+						//receive and parse the board config string 
+						char config[MAX_RECV_BUF];
+						int configLen = UDP_recv(s, config, MAX_RECV_BUF, (char*)host.c_str(), (char*)port.c_str());
+						NimGame game;
+						game.parseString(config);
 						// Play the game.  You are the challenger player
-						//receive and parse the board config string (logic in gameLogic.cpp)
-						int winner = Chat(s, serverName, host, port, serverName);
+						int winner = Nim(s, serverName, host, port, serverName, game);
 					}
 					else {
 						std::cout << "Request Denied. Please select another server or quit" << std::endl;

@@ -5,6 +5,7 @@
 #include <string>
 #include <WinSock2.h>
 
+
 int mainServer(int argc, char *argv[], std::string playerName)
 {
 	SOCKET s;
@@ -50,9 +51,34 @@ int mainServer(int argc, char *argv[], std::string playerName)
 
 						if (std::string(resp) == "GREAT!") {
 							std::string otherName(startOfName + strlen(TicTacToe_CHALLENGE));
-							// Play the game.  You are the host player
+
 							//choose initial board configuration
-							int winner = Chat(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, false);
+							//The server / host always specifies the number of rock piles 
+							//and how many rocks are in each pile
+							NimGame game;
+							game.chooseConfig();
+
+							// The specific rock pile configuration should be sent to the client 
+							// machine in a datagram that has the format : “mn1n1n2n2n3n3nmnm”, 
+							// where m is the number of piles and nini is a two digit number that 
+							// represents the number of rocks in the ith pile. 							char configbuf[MAX_SEND_BUF];
+							char rockbuf[MAX_SEND_BUF];
+							itoa(game.row_count, configbuf, 10);
+							for (int i = 0; i < game.row_count; i++) {
+								//If the number of rocks in the ith pile is less than 10,								if (game.rows[i] < 10) {
+									//the corresponding 2 digit number must have a leading zero.
+									itoa(0, rockbuf, 10);
+									strcat(configbuf, rockbuf);
+								}
+								itoa(game.rows[i], rockbuf, 10);
+								strcat(configbuf, rockbuf);
+							}
+
+							//send the board config to the client
+							int configLen = UDP_send(s, configbuf, strlen(configbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
+
+							// Play the game.  You are the host player
+							int winner = Nim(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, game, false);
 							finished = true;
 						}
 					}					

@@ -1,17 +1,19 @@
 #include <iostream>
 #include <vector>
+#include <random>
+#include <functional>
 
 using std::vector;
 using std::cout;
 using std::cin;
 using std::endl;
 
-class nimGame {
+class NimGame {
 
+public:
 	vector<int> rows;
 	//This number is specified by the host.
 	int row_count = 4;
-
 	/*
 	This function uses the vector and the global(now class) value rows
 	Iterates thru the vector and adds the number of rocks in total
@@ -53,7 +55,7 @@ class nimGame {
 	2- number: The amount of rocks we want to take from that rock
 	Return: Bool describing is the subtraction was sucessful
 	*/
-	bool remove_element(int row, int number) {
+	bool remove_elements(int row, int number) {
 
 		if (row < rows.size()) {
 			if (number <= rows[row]) {
@@ -64,7 +66,6 @@ class nimGame {
 		cout << "Please check your input and try again." << endl;
 		return false;
 	}
-
 
 	/*
 	This is a little AI model I found online, so now you can play the nim game with yourself
@@ -81,14 +82,13 @@ class nimGame {
 		rows[row] += number;
 	}
 
-
 	void computer() {
 		cout << "Computer turn..." << endl;
 		int sum = xOr();
 		for (int i = 0; i < rows.size(); i++) {
 			if (rows[i] > 0) {
 				for (int j = 1; j <= rows[i]; j++) {
-					remove_element(i, j);
+					remove_elements(i, j);
 					int sum = xOr();
 					if (sum != 0) {
 						add_element(i, j);
@@ -101,19 +101,13 @@ class nimGame {
 			}
 		}
 		int i = 0;
-		while (!remove_element(i, 1))
+		while (!remove_elements(i, 1))
 			i++;
 	}
 	//END of AI
 
-public:
-	int playgame() {
-
-		//Populating the vector:
-		//Sample String "4 10 02 10 14" 4 rows, 1-) 10 || 2-) 02 || 3-) 10 || 4-) 14
-		//NOTE: The requirements say that string must be 19 length the most, when receiveing the data please check for that to be true
-		char received_string[] = "410021014";
-
+	//parse through the received string and get the initial game configuration
+	void parseString(char* received_string) {
 		row_count = received_string[0] - '0';
 
 		rsize_t length = sizeof(received_string) - 2;
@@ -130,6 +124,30 @@ public:
 		for (int i = row_count - 1; i >= 0; i--) {
 			rows.push_back(rows_received[i]);
 		}
+	}
+
+	//choose initial board configuration
+	//The server / host always specifies the number of rock piles 
+	//and how many rocks are in each pile (3 <= Piles <= 9; 1 <= Rocks per Pile <= 20)
+	void chooseConfig() {
+		std::default_random_engine generator;
+		std::uniform_int_distribution<int> rowcount_distribution(3, 9);
+		row_count = rowcount_distribution(generator);  // generates number in the range 3..9
+		std::uniform_int_distribution<int> rockcount_distribution(1, 20);
+		auto numRocks = std::bind(rockcount_distribution, generator);
+		for (int i = 0; i < row_count; i++) {
+			rows[i] = numRocks(); // generates numbers in the range 1..20
+		}
+	}
+
+	int playgame() {
+
+		//Populating the vector:
+		//Sample String "4 10 02 10 14" 4 rows, 1-) 10 || 2-) 02 || 3-) 10 || 4-) 14
+		//NOTE: The requirements say that string must be 19 length the most, when receiveing the data please check for that to be true
+		char received_string[] = "410021014";
+
+		parseString(received_string);
 
 		cout << "Game Prototype" << endl;
 
@@ -143,7 +161,7 @@ public:
 				int row = command;
 				input(command, "how much you want to remove");
 				if (command != 0) {
-					validated = remove_element(row - 1, command);
+					validated = remove_elements(row - 1, command);
 					//Check to see is game is over
 					if (sum() == 0) {
 						cout << "You win." << endl;
