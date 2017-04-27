@@ -120,9 +120,20 @@ public:
 				}
 			}
 		}
-		int i = 0;
-		while (!remove_elements(i, 1))
-			i++;
+		std::string out;
+		srand(time(NULL));
+		int x = rand() % 9;
+		int y = rand() % (rows[x]);
+		out.append(x);
+		if (y < 10) {
+			out.append(0);
+			out.append(y);
+		}
+		else {
+			out.append(y);
+		}
+		return out;
+
 	}
 	//END of AI
 
