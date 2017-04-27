@@ -10,6 +10,8 @@ int mainClient(int argc, char *argv[], std::string playerName)
 	std::string host;
 	std::string port;
 	ServerStruct server[MAX_SERVERS];
+	
+	bool aiMoves = false;
 
 	SOCKET s = connectsock("", "", "udp");	// Create a socket  (Don't need to designate a host or port for UDP)
 
@@ -66,6 +68,14 @@ int mainClient(int argc, char *argv[], std::string playerName)
 				host = server[answer - 1].host;
 				port = server[answer - 1].port;
 
+
+				std::cout << "Would you like the computer to handle moves for you? (Y or N)";
+				std::string aiAnswer;
+				std::getline(cin, aiAnswer);
+
+				if (aiAnswer[0] == 'y' || aiAnswer[0] == 'Y')
+					aiMoves = true;
+
 				// Append playerName to the TicTacToe_CHALLENGE string & send a challenge to host:port
 				char buf[MAX_SEND_BUF];
 				strcpy_s(buf, TicTacToe_CHALLENGE);
@@ -96,7 +106,7 @@ int mainClient(int argc, char *argv[], std::string playerName)
 						NimGame game;
 						game.parseString(config);
 						// Play the game.  You are the challenger player
-						int winner = Nim(s, serverName, host, port, serverName, game);
+						int winner = Nim(s, serverName, host, port, serverName, game, aiMoves);
 					}
 					else {
 						std::cout << "Request Denied. Please select another server or quit" << std::endl;

@@ -40,6 +40,6 @@ int UDP_send (SOCKET, char*, int, char*, char*);
 int wait(SOCKET, int, int);
 char* getBroadcastAddress();
 int getServers(SOCKET, char*, char*, ServerStruct[]);
-int Nim(SOCKET, std::string, std::string, std::string, std::string, NimGame game, bool moveDef = true);
+int Nim(SOCKET, std::string, std::string, std::string, std::string, NimGame game, bool aiPlayer, bool moveDef = true);
 int mainServer(int, char*[], std::string);
 int mainClient(int, char*[], std::string);

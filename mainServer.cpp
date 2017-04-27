@@ -14,6 +14,14 @@ int mainServer(int argc, char *argv[], std::string playerName)
 	std::string host;
 	std::string port;
 	char response_str[MAX_SEND_BUF];
+	bool aiMoves = false;
+
+	std::cout << "Would you like the computer to handle moves for you? (Y or N)" ;
+	std::string aiAnswer;
+	std::getline(cin, aiAnswer);
+
+	if (aiAnswer[0] == 'y' || aiAnswer[0] == 'Y')
+		aiMoves = true;
 	
 	s = passivesock(TicTacToe_UDPPORT,"udp");
 
@@ -65,23 +73,23 @@ int mainServer(int argc, char *argv[], std::string playerName)
 							// represents the number of rocks in the ith pile. 
 							char configbuf[MAX_SEND_BUF];
 							char rockbuf[MAX_SEND_BUF];
-							itoa(game.row_count, configbuf, 10);
+							_itoa_s(game.row_count, configbuf, 10);
 							for (int i = 0; i < game.row_count; i++) {
 								//If the number of rocks in the ith pile is less than 10,
 								if (game.rows[i] < 10) {
 									//the corresponding 2 digit number must have a leading zero.
-									itoa(0, rockbuf, 10);
-									strcat(configbuf, rockbuf);
+									_itoa_s(0, rockbuf, 10);
+									strcat_s(configbuf, rockbuf);
 								}
-								itoa(game.rows[i], rockbuf, 10);
-								strcat(configbuf, rockbuf);
+								_itoa_s(game.rows[i], rockbuf, 10);
+								strcat_s(configbuf, rockbuf);
 							}
 
 							//send the board config to the client
 							int configLen = UDP_send(s, configbuf, strlen(configbuf) + 1, (char*)host.c_str(), (char*)port.c_str());
 
 							// Play the game.  You are the host player
-							int winner = Nim(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, game, false);
+							int winner = Nim(s, (char*)playerName.c_str(), (char*)host.c_str(), (char*)port.c_str(), otherName, game,  aiMoves, false);
 							finished = true;
 						}
 					}					

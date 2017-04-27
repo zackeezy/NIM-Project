@@ -9,7 +9,7 @@
 #include <cctype>
 #include <regex>
 
-int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remotePort, std::string name, NimGame game, bool moveDef)
+int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remotePort, std::string name, NimGame game, bool aiPlayer, bool moveDef)
 {
 	bool myMove = moveDef;
 	std::string temp;
@@ -22,70 +22,80 @@ int Nim(SOCKET s, std::string serverName, std::string remoteIP, std::string remo
 			//make it so they can continually chat but once they make a move 
 			//or forfeit their turn is over
 			bool chatting = true;
-			while (chatting) 
+			while (chatting)
 			{
-				bool validmessage = true;
-				std::cout << "Input move (1-" << game.row_count << "), chat message, or forfeit (f): ";
-				getline(std::cin, message);
+				if (!aiPlayer) 
+				{
+					bool validmessage = true;
+					std::cout << "Input move (1-" << game.row_count << "), chat message, or forfeit (f): ";
+					getline(std::cin, message);
 
-				temp = message;
+					temp = message;
 
-				for (char c : message) {
-					c = tolower(c);
-				}
+					for (char c : message) {
+						c = tolower(c);
+					}
 
-				if (_stricmp(temp.c_str(), "f") == 0) {
-					std::cout << "You have forfeited. You lose." << std::endl;
-					//need to send a capital f to count as a forfeit
-					message = "F";
-					chatting = false;
-				}
-				else {
-					try {
-						//else if a #
-						int rownum = stoi(message, nullptr);
-						if (rownum <= game.row_count && rownum > 0) {
-							std::cout << "how many would you like to remove? (1-" << game.rows[rownum - 1] << ")" << std::endl;
-							std::string rockstr;
-							std::getline(cin, rockstr);
-							int rocknum = stoi(rockstr, nullptr);
-							bool valid = game.remove_elements(rownum - 1, rocknum);
-							if (valid) {
-								//if 1 <= n <= numRocks, set message to move in right format
-								//mnn (1st n is a 0 if n < 10)
-								//set it so they can't make any more comments
-								chatting = false;
-								char messagebuf[MAX_SEND_BUF];
-								char rockbuf[MAX_SEND_BUF];
-								itoa(rownum, messagebuf, 10);
-								if (rocknum < 10) {
-									itoa(0, rockbuf, 10);
-									strcat(messagebuf, rockbuf);
+					if (_stricmp(temp.c_str(), "f") == 0) {
+						std::cout << "You have forfeited. You lose." << std::endl;
+						//need to send a capital f to count as a forfeit
+						message = "F";
+						chatting = false;
+					}
+					else {
+						try {
+							//else if a #
+							int rownum = stoi(message, nullptr);
+							if (rownum <= game.row_count && rownum > 0) {
+								std::cout << "how many would you like to remove? (1-" << game.rows[rownum - 1] << ")" << std::endl;
+								std::string rockstr;
+								std::getline(cin, rockstr);
+								int rocknum = stoi(rockstr, nullptr);
+								bool valid = game.remove_elements(rownum - 1, rocknum);
+								if (valid) {
+									//if 1 <= n <= numRocks, set message to move in right format
+									//mnn (1st n is a 0 if n < 10)
+									//set it so they can't make any more comments
+									chatting = false;
+									char messagebuf[MAX_SEND_BUF];
+									char rockbuf[MAX_SEND_BUF];
+									_itoa_s(rownum, messagebuf, 10);
+									if (rocknum < 10) {
+										_itoa_s(0, rockbuf, 10);
+										strcat_s(messagebuf, rockbuf);
+									}
+									_itoa_s(rocknum, rockbuf, 10);
+									strcat_s(messagebuf, rockbuf);
+									message = messagebuf;
 								}
-								itoa(rocknum, rockbuf, 10);
-								strcat(messagebuf, rockbuf);
-								message = messagebuf;
+								else {
+									//else it was an invalid move
+									//if user enters invalid move, let them choose again
+									std::cout << "Please check your input and try again." << std::endl;
+									validmessage = false;
+								}
 							}
 							else {
-								//else it was an invalid move
-								//if user enters invalid move, let them choose again
-								std::cout << "Please check your input and try again." << std::endl;
+								std::cout << "please enter a valid row" << std::endl;
 								validmessage = false;
 							}
+
 						}
-						else {
-							std::cout << "please enter a valid row"<<std::endl;
-							validmessage = false;
+						catch (...) {
+							//it's a comment, add a 'C' to the beginning to specify a chat
+							message = "C" + temp;
 						}
-															
 					}
-					catch(...){
-						//it's a comment, add a 'C' to the beginning to specify a chat
-						message = "C" + temp;
+					if (validmessage) {
+						int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
 					}
 				}
-				if (validmessage) {
-					int len1 = UDP_send(s, (char*)message.c_str(), message.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+				else
+				{
+					std::string aiMessage = game.computer();
+					chatting = false;
+					int len1 = UDP_send(s,(char*)aiMessage.c_str(), aiMessage.length() + 1, (char*)remoteIP.c_str(), (char*)remotePort.c_str());
+				
 				}
 			}
 

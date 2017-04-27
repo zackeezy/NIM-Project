@@ -11,6 +11,7 @@
 int main (int argc, char *argv[])
 {
 	WSADATA wsaData;
+
 	int iResult = WSAStartup (MAKEWORD(2,2), &wsaData);
 	if (iResult != 0) {
 		std::cout << "Unable to initialize Windows Socket library." << std::endl;

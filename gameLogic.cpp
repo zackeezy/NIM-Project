@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 //#include <random>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
@@ -82,20 +83,39 @@ public:
 		rows[row] += number;
 	}
 
-	void computer() {
-		cout << "Computer turn..." << endl;
+	std::string computer() {
+		//cout << "Computer turn..." << endl;
 		int sum = xOr();
 		for (int i = 0; i < rows.size(); i++) {
 			if (rows[i] > 0) {
 				for (int j = 1; j <= rows[i]; j++) {
 					remove_elements(i, j);
-					int sum = xOr();
+					sum = xOr();
 					if (sum != 0) {
 						add_element(i, j);
 					}
 					else {
 						cout << "Removed " << j << " from row " << i + 1 << endl;
-						return;
+						std::string aiMessage;
+						//Doesn't recognize MAX_SEND_BUF for some reason.
+						char message[100];
+						char rocks[10];
+						char pile[10];
+
+						_itoa_s((i + 1), pile, 10);
+						strcpy_s(message, pile);
+
+						if (j < 10)
+						{
+							_itoa_s(0, rocks, 10);
+							strcat_s(message, rocks);
+						}
+						_itoa_s(j, rocks, 10);
+						strcat_s(message, rocks);
+					
+						aiMessage = message;
+
+						return aiMessage;
 					}
 				}
 			}
